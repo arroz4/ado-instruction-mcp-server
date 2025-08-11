@@ -1,0 +1,63 @@
+Transcript – Online Meeting
+Participants:
+
+Omar Barrera (OB) – Software Engineer
+
+Gerardo Guerrero (GG) – Stakeholder / Requester
+
+1. GG: Hi Omar, can you hear me?
+2. OB: Yes, loud and clear. How’s it going, Gerardo?
+3. GG: Good, thanks. I wanted to talk about a new table we need in our SQL database.
+4. OB: Sure, what’s the purpose of the table?
+5. GG: It’s for tracking client subscription changes over time. Right now, we only store the current subscription data.
+6. OB: So, kind of like a history log of subscription updates?
+7. GG: Exactly. We want to know when a client changes their plan, who triggered it, and what the change was.
+8. OB: Got it. Do you need this linked to the existing Clients table?
+9. GG: Yes, ideally with a foreign key to the client’s ID.
+10. OB: Okay. What columns are you thinking?
+
+11. GG: Client ID, old plan, new plan, date of change, and the user who made the change.
+12. OB: Do you also want to store the reason for the change?
+13. GG: That could be useful. Let’s add a column for that.
+14. OB: Sure. Any constraints on data types?
+15. GG: The plans are stored as strings, right?
+16. OB: Currently yes, but it might be better to store them as IDs referencing a Plans table.
+17. GG: That makes sense, let’s do it that way.
+18. OB: Alright, so Client ID (int), Old Plan ID (int), New Plan ID (int), DateChanged (datetime), ChangedByUserID (int), Reason (varchar).
+19. GG: Yes, that’s perfect.
+20. OB: What about indexing?
+
+21. GG: Probably index by Client ID and DateChanged.
+22. OB: Agreed. That’ll make queries for a specific client’s history fast.
+23. GG: Exactly. We’ll need to run reports showing a timeline of changes.
+24. OB: Understood. How should we handle deletes? Soft delete flag or permanent?
+25. GG: Let’s go with soft delete, just in case we need to recover data.
+26. OB: Okay, I’ll add an IsDeleted bit column.
+27. GG: Great. What’s the expected timeline for this?
+28. OB: If it’s just the table and basic constraints, I can have it ready by tomorrow.
+29. GG: That works.
+30. OB: Will you need an API endpoint to fetch this data later?
+
+31. GG: Yes, but we can handle that as a separate task.
+32. OB: Sounds good. Should I also create a stored procedure for inserting changes?
+33. GG: Yes, that will standardize how we insert.
+34. OB: Okay. I’ll name it InsertSubscriptionChange unless you have another preference.
+35. GG: That’s fine.
+36. OB: And for retrieving, maybe GetSubscriptionHistoryByClient.
+37. GG: Perfect.
+38. OB: Any permissions needed on this table?
+39. GG: Only admins should be able to insert or delete.
+40. OB: Got it. I’ll set up roles accordingly.
+
+41. GG: Thanks. Will you also add it to the staging environment first?
+42. OB: Yes, I’ll push it to staging for testing before production.
+43. GG: Good. I’ll prepare some test cases.
+44. OB: Great. Should we log these changes in our audit table too?
+45. GG: Yes, just to keep everything consistent.
+46. OB: Noted. I’ll make sure the triggers are set up.
+47. GG: Awesome. This will help a lot with client support cases.
+48. OB: Yeah, we’ll have a clear record of every subscription change.
+49. GG: Thanks for jumping on this quickly.
+50. OB: No problem. I’ll send you the script for review later today.
+51. GG: Perfect, talk soon.
+52. OB: Bye.
