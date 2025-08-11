@@ -1,0 +1,9 @@
+{
+	"servers": {
+		"ado-instruction-server": {
+			"url": "http://localhost:2000/mcp/",
+			"type": "http"
+		}
+	},
+	"inputs": []
+}

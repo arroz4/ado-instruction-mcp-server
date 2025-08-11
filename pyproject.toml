@@ -1,11 +1,13 @@
 [project]
 name = "ado-instructions"
 version = "0.1.0"
-description = "MCP server for converting meeting transcripts and images into Azure DevOps work item instructions"
+description = "MCP server for converting meeting transcripts, text documents, and images into Azure DevOps work item instructions using Azure OpenAI"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
     "fastmcp>=2.11.2",
     "uvicorn>=0.24.0",
     "fastapi>=0.104.0",
+    "python-dotenv>=1.1.1",
+    "openai>=1.0.0",
 ]
