@@ -14,6 +14,7 @@ arrow parsing to create proper Epic → Task hierarchies from visual documentati
 
 import argparse
 import json
+import os
 import fastmcp
 from pathlib import Path
 import base64
@@ -482,8 +483,8 @@ if __name__ == "__main__":
                        help="Transport protocol (default: http)")
     parser.add_argument("--port", type=int, default=2000, 
                        help="Port for HTTP transport (default: 2000)")
-    parser.add_argument("--host", default="localhost", 
-                       help="Host for HTTP transport (default: localhost)")
+    parser.add_argument("--host", default="0.0.0.0", 
+                       help="Host for HTTP transport (default: 0.0.0.0)")
     
     args = parser.parse_args()
     

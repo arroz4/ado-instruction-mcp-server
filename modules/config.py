@@ -11,15 +11,41 @@ from typing import Optional
 
 
 def setup_environment():
-    """Setup environment variables and configuration"""
-    try:
-        from dotenv import load_dotenv
-        load_dotenv()
-        print("✅ Environment variables loaded from .env file")
-    except ImportError:
-        print("⚠️ python-dotenv not installed, skipping .env file loading")
-    except Exception as e:
-        print(f"⚠️ Error loading .env file: {e}")
+    """Setup environment variables and configuration for local and Azure Container Apps"""
+    # Check if running in Azure Container Apps
+    # Azure Container Apps sets CONTAINER_APP_NAME environment variable
+    is_azure_container_app = (
+        os.getenv('CONTAINER_APP_NAME') is not None or 
+        os.getenv('CONTAINER_APP_REVISION') is not None or
+        os.getenv('AZURE_OPENAI_ENDPOINT') is not None  # If Azure env vars are set, likely in cloud
+    )
+    
+    if is_azure_container_app:
+        print("🌐 Running in Azure Container Apps - using Azure environment variables")
+        # Validate required environment variables are present
+        required_env_vars = ['AZURE_OPENAI_ENDPOINT', 'AZURE_OPENAI_API_KEY']
+        missing_vars = [var for var in required_env_vars if not os.getenv(var)]
+        
+        if missing_vars:
+            print(f"❌ Missing required environment variables in Azure: {', '.join(missing_vars)}")
+            print("💡 Please configure these variables in your Azure Container App configuration")
+        else:
+            print("✅ All required Azure environment variables found")
+    else:
+        # Local development - try to load from .env file
+        print("🏠 Running locally - checking for .env file")
+        try:
+            from dotenv import load_dotenv
+            env_file = Path(__file__).parent.parent / '.env'
+            if env_file.exists():
+                load_dotenv(env_file)
+                print("✅ Environment variables loaded from .env file")
+            else:
+                print("⚠️ No .env file found - checking system environment variables")
+        except ImportError:
+            print("⚠️ python-dotenv not installed, using system environment variables only")
+        except Exception as e:
+            print(f"⚠️ Error loading .env file: {e}")
 
 
 def get_azure_openai_config() -> dict:
@@ -72,38 +98,29 @@ def validate_azure_openai_config() -> bool:
     return True
 
 
-def setup_tesseract():
-    """Configure Tesseract OCR with fallback paths"""
-    try:
-        import pytesseract
-        
-        # Try to get Tesseract path from environment variable
-        tesseract_cmd = os.getenv('tesseract_cmd')
-        
-        if tesseract_cmd and os.path.exists(tesseract_cmd):
-            pytesseract.pytesseract.tesseract_cmd = tesseract_cmd
-            print(f"🔧 Tesseract configured from environment: {tesseract_cmd}")
-            return True
-        
-        # Fallback to default Windows installation path
-        default_path = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
-        if os.path.exists(default_path):
-            pytesseract.pytesseract.tesseract_cmd = default_path
-            print(f"🔧 Tesseract found at default path: {default_path}")
-            return True
-        
-        print("⚠️ Tesseract OCR not found. Please install Tesseract or set tesseract_cmd in .env file")
-        return False
-        
-    except ImportError:
-        print("⚠️ pytesseract not installed. Image OCR functionality will be limited.")
-        return False
-    except Exception as e:
-        print(f"⚠️ Error setting up Tesseract: {e}")
-        return False
-
-
 def get_organization_context() -> dict:
     """Get organization context from models"""
     from .models import ORGANIZATION_CONTEXT
     return ORGANIZATION_CONTEXT
+
+
+def get_environment_info() -> dict:
+    """
+    Get information about the current environment
+    
+    Returns:
+        Dictionary containing environment information
+    """
+    is_azure_container_app = (
+        os.getenv('CONTAINER_APP_NAME') is not None or 
+        os.getenv('CONTAINER_APP_REVISION') is not None or
+        os.getenv('AZURE_OPENAI_ENDPOINT') is not None
+    )
+    
+    return {
+        "environment": "azure_container_app" if is_azure_container_app else "local",
+        "azure_container_app": is_azure_container_app,
+        "container_app_name": os.getenv('CONTAINER_APP_NAME'),
+        "azure_openai_configured": bool(os.getenv('AZURE_OPENAI_ENDPOINT') and os.getenv('AZURE_OPENAI_API_KEY')),
+        "python_dotenv_available": True
+    }

@@ -1,7 +1,7 @@
 {
 	"servers": {
 		"ado-instruction-server": {
-			"url": "http://localhost:2000/mcp/",
+			"url": "https://ado-instructions-server.victoriousisland-5d5071fe.westus2.azurecontainerapps.io/mcp/",
 			"type": "http"
 		}
 	},

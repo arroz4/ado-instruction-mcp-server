@@ -14,7 +14,7 @@ This package contains focused modules for different aspects of the system:
 """
 
 from .models import WorkItem, WorkItemType, Priority, ADOInstructions, ORGANIZATION_CONTEXT
-from .config import setup_environment, get_organization_context, get_azure_openai_config
+from .config import setup_environment, get_organization_context, get_azure_openai_config, get_environment_info
 from .text_processor import extract_features_from_text, extract_requirements_from_text, determine_priority_from_text
 from .image_processor import process_image_with_azure_openai, load_image_as_base64, get_azure_openai_client, format_image_analysis_result
 from .ado_generator import generate_ado_instructions, format_ado_summary, create_epic_from_feature, create_task_from_requirement
@@ -30,7 +30,7 @@ __all__ = [
     # Models
     'WorkItem', 'WorkItemType', 'Priority', 'ADOInstructions', 'ORGANIZATION_CONTEXT',
     # Configuration
-    'setup_environment', 'get_organization_context', 'get_azure_openai_config',
+    'setup_environment', 'get_organization_context', 'get_azure_openai_config', 'get_environment_info',
     # Text processing
     'extract_features_from_text', 'extract_requirements_from_text', 'determine_priority_from_text',
     # Image processing

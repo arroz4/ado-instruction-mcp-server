@@ -3,7 +3,7 @@
     "ado-instructions": {
       "transport": {
         "type": "http",
-        "url": "http://localhost:8000/mcp/"
+        "url": "http://localhost:3000/mcp/"
       },
       "description": "ADO Instructions Server - Convert meeting transcripts, text documents, and images into Azure DevOps work items using Azure OpenAI",
       "tools": [

@@ -477,6 +477,153 @@ The server gracefully handles missing dependencies:
 | **Import errors** | Check module structure and relative imports |
 | **Text processing errors** | Verify input format and content |
 
+## 🚀 Production Deployment
+
+### Azure Container Apps Deployment
+
+The server is designed to run in Azure Container Apps with proper containerization and dependency management.
+
+#### 🔧 **Key Deployment Configurations**
+
+```dockerfile
+# Dockerfile - Fixed configuration for Azure Container Apps
+FROM python:3.11-slim
+
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV CONTAINER_ENV=true
+
+WORKDIR /app
+
+# Use uv for fast dependency management
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /usr/local/bin/
+COPY pyproject.toml uv.lock ./
+RUN uv sync --frozen --no-cache
+
+COPY . .
+
+# Critical: Use 0.0.0.0 for container networking
+CMD ["uv", "run", "python", "server.py", "--port", "3000", "--host", "0.0.0.0"]
+```
+
+#### 🛠️ **Environment Variables for Azure Container Apps**
+
+```bash
+# Required Azure OpenAI Configuration
+AZURE_OPENAI_ENDPOINT=https://your-endpoint.openai.azure.com/
+AZURE_OPENAI_API_KEY=your-api-key
+AZURE_OPENAI_API_VERSION=2024-12-01-preview
+AZURE_OPENAI_DEPLOYMENT=o4-mini-imagebot
+AZURE_OPENAI_MODEL=o4-mini
+
+# Container Environment Detection
+CONTAINER_ENV=true
+```
+
+#### 📋 **Deployment Steps**
+
+1. **Build and Tag Image**
+   ```bash
+   docker build -t your-registry.azurecr.io/ado-instructions-server:v1.2.0 .
+   ```
+
+2. **Push to Azure Container Registry**
+   ```bash
+   az acr login --name your-registry
+   docker push your-registry.azurecr.io/ado-instructions-server:v1.2.0
+   ```
+
+3. **Update Container App**
+   ```bash
+   az containerapp update \
+     --name ado-instructions-server \
+     --resource-group YourResourceGroup \
+     --image your-registry.azurecr.io/ado-instructions-server:v1.2.0
+   ```
+
+#### ⚠️ **Common Deployment Issues Solved**
+
+| Issue | Root Cause | Solution |
+|-------|------------|----------|
+| **503 Service Unavailable** | Server binding to `localhost` instead of `0.0.0.0` | Use `--host 0.0.0.0` in CMD |
+| **ModuleNotFoundError: openai** | Dependencies not loaded in container | Use `uv run python server.py` |
+| **Port mismatch** | Default port 2000 vs container port 3000 | Explicitly set `--port 3000` |
+| **Environment detection** | Local .env vs Azure environment variables | Smart environment detection in config.py |
+
+#### ✅ **Deployment Verification**
+
+After deployment, verify the server is running:
+
+```bash
+# Check container app status
+az containerapp show --name ado-instructions-server --resource-group YourResourceGroup --query "properties.runningStatus"
+
+# Check logs for successful startup
+az containerapp logs show --name ado-instructions-server --resource-group YourResourceGroup --tail 20
+
+# Expected log output:
+# ✅ Azure OpenAI configured - Image processing available
+# INFO: Uvicorn running on http://0.0.0.0:3000
+```
+
+#### 🧩 **Deployment Challenges Solved**
+
+**Challenge 1: Network Binding in Containers**
+- **Problem**: Server defaulted to `localhost`, preventing external connections in Azure Container Apps
+- **Root Cause**: Container networking requires binding to `0.0.0.0` to accept traffic from container orchestrator
+- **Solution**: Changed default host from `"localhost"` to `"0.0.0.0"` in server.py argument parsing
+- **Impact**: Fixed 503 Service Unavailable errors
+
+**Challenge 2: Dependency Loading in Containers**
+- **Problem**: `ModuleNotFoundError: No module named 'openai'` when running `python server.py` directly
+- **Root Cause**: Container environment needed proper dependency isolation and loading
+- **Solution**: Use `uv run python server.py` instead of direct `python server.py` execution
+- **Impact**: Ensures all dependencies are available in container runtime
+
+**Challenge 3: Port Configuration Consistency**
+- **Problem**: Dockerfile used port 3000, but server default was 2000
+- **Root Cause**: Mismatched port configurations between container and server defaults
+- **Solution**: Explicitly specify `--port 3000` in Dockerfile CMD instruction
+- **Impact**: Consistent port usage across all deployment methods
+
+**Challenge 4: Environment Variable Detection**
+- **Problem**: Server tried to load .env file in container environment
+- **Root Cause**: No environment detection logic to differentiate local vs cloud deployment
+- **Solution**: Added smart environment detection in config.py using Azure-specific environment variables
+- **Impact**: Proper configuration loading for both local development and Azure deployment
+
+#### 🔄 **Before vs After Deployment Fix**
+
+| Aspect | Before (Failing) | After (Working) |
+|--------|------------------|-----------------|
+| **Host Binding** | `localhost` (container internal) | `0.0.0.0` (accepts external traffic) |
+| **Dependency Loading** | `python server.py` (missing modules) | `uv run python server.py` (isolated environment) |
+| **Port Configuration** | Mixed (2000 default, 3000 exposed) | Consistent `3000` throughout |
+| **Environment Detection** | Always tries .env file | Smart detection: .env for local, env vars for Azure |
+| **Container Status** | 503 Service Unavailable | ✅ Running successfully |
+
+#### 🔗 **MCP Configuration**
+
+Update your local MCP configuration to use the deployed server:
+
+```json
+{
+  "servers": {
+    "ado-instruction-server": {
+      "url": "https://your-app.azurecontainerapps.io/mcp/",
+      "type": "http"
+    }
+  }
+}
+```
+
+### Local Development vs Production
+
+| Environment | Host | Port | Dependencies | Environment Variables |
+|-------------|------|------|--------------|----------------------|
+| **Local** | `localhost` or `0.0.0.0` | `2000` (default) | `uv run` recommended | `.env` file |
+| **Azure Container Apps** | `0.0.0.0` (required) | `3000` | `uv run` (required) | Azure Container App settings |
+
 ## 🎯 Best Practices
 
 ### ⭐ NEW: File Discovery Workflow
